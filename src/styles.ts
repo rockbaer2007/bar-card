@@ -171,6 +171,7 @@ export const styles = html`
       color: var(--bar-color);
       filter: brightness(0.75);
       height: 16px;
+      opacity: 0;
       width: 16px;
       position: relative;
       text-align: center;
@@ -182,6 +183,22 @@ export const styles = html`
     .indicator-direction-up {
       margin: 4px;
     }
+    @keyframes bar-card-indicator-fade-a {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+    @keyframes bar-card-indicator-fade-b {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
     bar-card-name {
       align-items: center;
       align-self: center;
@@ -191,6 +208,10 @@ export const styles = html`
       position: relative;
       text-align: left;
       text-overflow: ellipsis;
+    }
+    bar-card-name,
+    bar-card-value {
+      line-height: 1;
     }
     .name-outside {
       margin-left: 16px;

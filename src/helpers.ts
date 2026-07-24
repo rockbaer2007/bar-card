@@ -35,16 +35,35 @@ export function mapRange(num: number, in_min: number, in_max: number, out_min: n
   return ((num - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
 }
 
+export function getNumberOrEntityState(hass: HomeAssistant | undefined, value: number | string): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  const directNumber = Number(value);
+  if (!Number.isNaN(directNumber)) {
+    return directNumber;
+  }
+
+  if (!hass?.states[value]) {
+    return 0;
+  }
+
+  const entityValue = Number(hass.states[value].state);
+  return Number.isNaN(entityValue) ? 0 : entityValue;
+}
+
 // Check if config or Entity changed
 export function hasConfigOrEntitiesChanged(element: any, changedProps: PropertyValues, forceUpdate: boolean): boolean {
   if (changedProps.has('config') || forceUpdate) {
     return true;
   }
   for (const config of element._configArray) {
-    if (config.entity) {
+    const watchedEntities = [config.entity, config.min, config.max].filter(value => typeof value === 'string') as string[];
+    for (const entity of watchedEntities) {
       const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
       if (oldHass) {
-        if (oldHass.states[config.entity] !== element.hass!.states[config.entity]) {
+        if (oldHass.states[entity] !== element.hass!.states[entity]) {
           return true;
         } else {
           continue;

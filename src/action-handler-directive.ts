@@ -110,7 +110,7 @@ class ActionHandler extends HTMLElement implements ActionHandlerHost {
       this.timer = undefined;
       if (this.held) {
         fireEvent(element as HTMLElement, 'action', { action: 'hold' });
-      } else if (options.hasDoubleTap) {
+      } else if (options.hasDoubleClick) {
         if ((ev as MouseEvent).detail === 1 || ev.type === 'keyup') {
           this.dblClickTimeout = window.setTimeout(() => {
             fireEvent(element as HTMLElement, 'action', { action: 'tap' });

@@ -982,7 +982,6 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
                 ></paper-input>
                 <paper-input
                   class="value-number"
-                  type="number"
                   label="Min"
                   .value="${config.min ? config.min : ''}"
                   editable
@@ -992,7 +991,6 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
                 ></paper-input>
                 <paper-input
                   class="value-number"
-                  type="number"
                   label="Max"
                   .value="${config.max ? config.max : ''}"
                   editable

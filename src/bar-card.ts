@@ -15,7 +15,7 @@ import { BarCardConfig } from './types';
 import { actionHandler } from './action-handler-directive';
 import { CARD_VERSION } from './const';
 import { localize } from './localize/localize';
-import { mergeDeep, hasConfigOrEntitiesChanged, createConfigArray } from './helpers';
+import { mergeDeep, hasConfigOrEntitiesChanged, createConfigArray, getNumberOrEntityState } from './helpers';
 import { styles } from './styles';
 
 /* eslint no-console: 0 */
@@ -41,6 +41,7 @@ export class BarCard extends LitElement {
   @property() private _configArray: BarCardConfig[] = [];
   private _stateArray: any[] = [];
   private _animationState: any[] = [];
+  private _indicatorToggle: boolean[] = [];
   private _rowAmount = 1;
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
@@ -148,10 +149,21 @@ export class BarCard extends LitElement {
           }
         }
 
+        let max = getNumberOrEntityState(this.hass, config.max);
+        let min = getNumberOrEntityState(this.hass, config.min);
+        if (max <= min) {
+          if (max === 0 && min === 0) {
+            min = 0;
+            max = 100;
+          } else {
+            max = min + Math.max(1, Math.abs(min) * 0.1);
+          }
+        }
+
         // If limit_value is defined limit the displayed value to min and max.
         if (config.limit_value) {
-          entityState = Math.min(entityState, config.max);
-          entityState = Math.max(entityState, config.min);
+          entityState = Math.min(entityState, max);
+          entityState = Math.max(entityState, min);
         }
 
         // If decimal is defined check if NaN and apply number fix.
@@ -161,8 +173,7 @@ export class BarCard extends LitElement {
         }
 
         // Defined height and check for configured height.
-        let barHeight: string | number = 40;
-        if (config.height) barHeight = config.height;
+        const barHeight: string | number = config.height ?? Math.round(this._getLineHeightPx() * 2);
 
         // Set style variables based on direction.
         let alignItems = 'stretch';
@@ -264,18 +275,18 @@ export class BarCard extends LitElement {
         switch (config.positions.minmax) {
           case 'outside':
             minMaxOutside = html`
-              <bar-card-min>${config.min}${unitOfMeasurement}</bar-card-min>
+              <bar-card-min>${min}${unitOfMeasurement}</bar-card-min>
               <bar-card-divider>/</bar-card-divider>
-              <bar-card-max>${config.max}${unitOfMeasurement}</bar-card-max>
+              <bar-card-max>${max}${unitOfMeasurement}</bar-card-max>
             `;
             break;
           case 'inside':
             minMaxInside = html`
               <bar-card-min class="${config.direction == 'up' ? 'min-direction-up' : 'min-direction-right'}"
-                >${config.min}${unitOfMeasurement}</bar-card-min
+                >${min}${unitOfMeasurement}</bar-card-min
               >
               <bar-card-divider>/</bar-card-divider>
-              <bar-card-max> ${config.max}${unitOfMeasurement}</bar-card-max>
+              <bar-card-max> ${max}${unitOfMeasurement}</bar-card-max>
             `;
             break;
           case 'off':
@@ -289,7 +300,7 @@ export class BarCard extends LitElement {
           case 'outside':
             valueOutside = html`
               <bar-card-value class="${config.direction == 'up' ? 'value-direction-up' : 'value-direction-right'}"
-                >${config.complementary ? config.max - entityState : entityState} ${unitOfMeasurement}</bar-card-value
+                >${config.complementary ? max - entityState : entityState} ${unitOfMeasurement}</bar-card-value
               >
             `;
             break;
@@ -301,7 +312,7 @@ export class BarCard extends LitElement {
                   : config.direction == 'up'
                   ? 'value-direction-up'
                   : 'value-direction-right'}"
-                >${config.complementary ? config.max - entityState : entityState} ${unitOfMeasurement}</bar-card-value
+                >${config.complementary ? max - entityState : entityState} ${unitOfMeasurement}</bar-card-value
               >
             `;
             break;
@@ -331,19 +342,23 @@ export class BarCard extends LitElement {
         // Set indicator html based on position.
         let indicatorOutside;
         let indicatorInside;
+        const fadeName = this._indicatorToggle[index] ? 'bar-card-indicator-fade-a' : 'bar-card-indicator-fade-b';
+        const indicatorStyleFade = indicatorText ? `opacity: 1; animation: ${fadeName} 2s forwards;` : '';
         switch (config.positions.indicator) {
           case 'outside':
             indicatorOutside = html`
               <bar-card-indicator
                 class="${config.direction == 'up' ? '' : 'indicator-direction-right'}"
-                style="--bar-color: ${barColor};"
+                style="--bar-color: ${barColor}; ${indicatorStyleFade}"
                 >${indicatorText}</bar-card-indicator
               >
             `;
             break;
           case 'inside':
             indicatorInside = html`
-              <bar-card-indicator style="--bar-color: ${barColor};">${indicatorText}</bar-card-indicator>
+              <bar-card-indicator style="--bar-color: ${barColor}; ${indicatorStyleFade}"
+                >${indicatorText}</bar-card-indicator
+              >
             `;
             break;
           case 'off':
@@ -351,10 +366,10 @@ export class BarCard extends LitElement {
         }
 
         // Set bar percent and marker percent based on value difference.
-        const barPercent = this._computePercent(entityState, index);
-        const targetMarkerPercent = this._computePercent(config.target, index);
+        const barPercent = this._computePercent(entityState, index, max, min);
+        const targetMarkerPercent = this._computePercent(config.target, index, max, min);
         let targetStartPercent = barPercent;
-        let targetEndPercent = this._computePercent(config.target, index);
+        let targetEndPercent = this._computePercent(config.target, index, max, min);
         if (targetEndPercent < targetStartPercent) {
           targetStartPercent = targetEndPercent;
           targetEndPercent = barPercent;
@@ -431,6 +446,7 @@ export class BarCard extends LitElement {
         // Set entity state inside array if changed.
         if (entityState !== this._stateArray[index]) {
           this._stateArray[index] = entityState;
+          this._indicatorToggle[index] = !this._indicatorToggle[index];
         }
       }
 
@@ -534,22 +550,41 @@ export class BarCard extends LitElement {
     return icon;
   }
 
-  private _computePercent(value: string, index: number): number {
+  private _computePercent(value: string, index: number, max: number, min: number): number {
     const config = this._configArray[index];
     const numberValue = Number(value);
 
     if (value == 'unavailable') return 0;
     if (isNaN(numberValue)) return 100;
+    if (max === min) return numberValue >= max ? 100 : 0;
 
     switch (config.direction) {
       case 'right-reverse':
       case 'left-reverse':
       case 'up-reverse':
       case 'down-reverse':
-        return 100 - (100 * (numberValue - config.min)) / (config.max - config.min);
+        return 100 - (100 * (numberValue - min)) / (max - min);
       default:
-        return (100 * (numberValue - config.min)) / (config.max - config.min);
+        return (100 * (numberValue - min)) / (max - min);
     }
+  }
+
+  private _getLineHeightPx(): number {
+    try {
+      const styles = getComputedStyle(document.body);
+      const lineHeight = parseFloat(styles.lineHeight);
+      if (!Number.isNaN(lineHeight) && Number.isFinite(lineHeight)) return lineHeight;
+
+      const fontSize = parseFloat(styles.fontSize) || 14;
+      const lineHeightMultiplier = parseFloat(styles.getPropertyValue('--ha-line-height-normal'));
+      if (!Number.isNaN(lineHeightMultiplier) && Number.isFinite(lineHeightMultiplier)) {
+        return fontSize * lineHeightMultiplier;
+      }
+    } catch {
+      // Fall back below when computed styles are unavailable.
+    }
+
+    return 20;
   }
 
   private _handleAction(ev): void {
