@@ -1,9 +1,12 @@
-import { directive, PropertyPart } from 'lit-html';
+import { directive, Directive, PartInfo, PartType, PropertyPart } from 'lit/directive.js';
 import { fireEvent, ActionHandlerOptions } from 'custom-card-helpers';
 
-const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+const isTouch =
+  'ontouchstart' in window ||
+  navigator.maxTouchPoints > 0 ||
+  ((navigator as Navigator & { msMaxTouchPoints?: number }).msMaxTouchPoints ?? 0) > 0;
 
-interface ActionHandler extends HTMLElement {
+interface ActionHandlerHost extends HTMLElement {
   holdTime: number;
   bind(element: Element, options): void;
 }
@@ -11,9 +14,8 @@ interface ActionHandlerElement extends Element {
   actionHandler?: boolean;
 }
 
-class ActionHandler extends HTMLElement implements ActionHandler {
+class ActionHandler extends HTMLElement implements ActionHandlerHost {
   public holdTime: number;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   public ripple: any;
   protected timer: number | undefined;
   protected held: boolean;
@@ -186,6 +188,21 @@ export const actionHandlerBind = (element: ActionHandlerElement, options: Action
   actionhandler.bind(element, options);
 };
 
-export const actionHandler = directive((options: ActionHandlerOptions = {}) => (part: PropertyPart): void => {
-  actionHandlerBind(part.committer.element, options);
-});
+class ActionHandlerDirective extends Directive {
+  constructor(partInfo: PartInfo) {
+    super(partInfo);
+    if (partInfo.type !== PartType.PROPERTY) {
+      throw new Error('actionHandler can only be used in property bindings');
+    }
+  }
+
+  public update(part: PropertyPart, [options]: [ActionHandlerOptions]): void {
+    actionHandlerBind(part.element as ActionHandlerElement, options);
+  }
+
+  public render(_options: ActionHandlerOptions = {}): void {
+    return undefined;
+  }
+}
+
+export const actionHandler = directive(ActionHandlerDirective);

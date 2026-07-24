@@ -1,5 +1,6 @@
-import { LitElement, html, customElement, property, TemplateResult, CSSResult, css, PropertyValues } from 'lit-element';
-import { HomeAssistant, fireEvent, LovelaceCardEditor, ActionConfig } from 'custom-card-helpers';
+import { LitElement, html, TemplateResult, CSSResult, css, PropertyValues } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { HomeAssistant, fireEvent, LovelaceCardEditor } from 'custom-card-helpers';
 
 import { BarCardConfig } from './types';
 import { createEditorConfigArray, arrayMove, hasConfigOrEntitiesChanged } from './helpers';
@@ -120,7 +121,7 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
       },
     };
 
-    for (const config of this._configArray) {
+    for (let i = 0; i < this._configArray.length; i++) {
       this._entityOptionsArray.push({ ...entityOptions });
     }
     if (!this._options) {
@@ -179,7 +180,6 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
     }
 
     const options = this._options.entities;
-    const entities = Object.keys(this.hass.states);
     const valueElementArray: TemplateResult[] = [];
     for (const config of this._configArray) {
       const index = this._configArray.indexOf(config);
@@ -724,7 +724,6 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
       return html``;
     }
     const config: any = this._config;
-    const index = null;
     const options = this._options.appearance.options.card;
     return html`
       <div class="category" id="card">
@@ -867,13 +866,10 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
     }
 
     let options;
-    let config;
     if (index === null) {
       options = this._options.appearance.options.positions;
-      config = this._config;
     } else {
       options = this._options.entities.options.entities[index].options.positions;
-      config = this._configArray[index];
     }
     return html`
       <div class="category">
@@ -1176,13 +1172,11 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
 
     const clonedArray = severityArray.slice();
     const newArray: any = [];
-    let arrayIndex = 0;
-    for (const config of clonedArray) {
+    clonedArray.forEach((config, arrayIndex) => {
       if (target.severityIndex !== arrayIndex) {
-        newArray.push(clonedArray[arrayIndex]);
+        newArray.push(config);
       }
-      arrayIndex++;
-    }
+    });
     if (target.index === null) {
       if (newArray.length === 0) {
         delete this._config.severity;
@@ -1325,9 +1319,13 @@ export class BarCardEditor extends LitElement implements LovelaceCardEditor {
     `;
   }
 }
-// @ts-ignore
+declare global {
+  interface Window {
+    customCards?: Array<Record<string, unknown>>;
+  }
+}
+
 window.customCards = window.customCards || [];
-// @ts-ignore
 window.customCards.push({
   type: 'bar-card',
   name: 'Bar Card',

@@ -1,4 +1,5 @@
-import { LitElement, html, customElement, property, TemplateResult, PropertyValues } from 'lit-element';
+import { LitElement, html, TemplateResult, PropertyValues } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import {
   HomeAssistant,
   hasAction,
@@ -319,8 +320,6 @@ export class BarCard extends LitElement {
           indicatorText = '▼';
           if (config.direction == 'up') this._animationState[index] = 'animation-decrease-vertical';
           else this._animationState[index] = 'animation-decrease';
-        } else {
-          this._animationState[index] = this._animationState[index];
         }
         if (isNaN(Number(entityState))) {
           indicatorText = '';

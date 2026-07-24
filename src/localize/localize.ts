@@ -16,7 +16,7 @@ export function localize(string: string, search: string = '', replace: string = 
 
   try {
     tranlated = languages[lang][section][key];
-  } catch (e) {
+  } catch {
     tranlated = languages['en'][section][key];
   }
 
