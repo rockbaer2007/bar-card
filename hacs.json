@@ -1,5 +1,6 @@
 {
     "name": "Bar Card",
     "render_readme": true,
-    "filename": "bar-card.js"
+    "filename": "bar-card.js",
+    "homeassistant": "2026.7.0"
 }

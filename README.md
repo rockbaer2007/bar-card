@@ -1,8 +1,17 @@
 ![Project Maintenance](https://img.shields.io/maintenance/no/2020)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://www.hacs.xyz/docs/faq/custom_repositories/)
 
 # bar-card
 
 This repository is a clone/fork of [custom-cards/bar-card](https://github.com/custom-cards/bar-card).
+
+## HACS installation
+
+1. Open HACS in Home Assistant.
+2. Open the three-dot menu and choose "Custom repositories".
+3. Add `https://github.com/rockbaer2007/bar-card`.
+4. Select repository type "Dashboard".
+5. Install "Bar Card".
 
 ## [Examples](#examples-1)
 
