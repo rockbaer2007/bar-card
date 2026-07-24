@@ -3,7 +3,7 @@
 
 # bar-card
 
-This repository is a clone/fork of [custom-cards/bar-card](https://github.com/custom-cards/bar-card).
+This repository is a fork of [spacerokk/bar-card](https://github.com/spacerokk/bar-card), which is based on [custom-cards/bar-card](https://github.com/custom-cards/bar-card).
 
 ## HACS installation
 
