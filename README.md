@@ -1,5 +1,5 @@
 ![Project Maintenance](https://img.shields.io/maintenance/no/2020)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://www.hacs.xyz/docs/faq/custom_repositories/)
+[![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=rockbaer2007&repository=bar-card&category=plugin)
 
 # bar-card
 
