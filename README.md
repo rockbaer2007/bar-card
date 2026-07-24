@@ -2,6 +2,8 @@
 
 # bar-card
 
+This repository is a clone/fork of [custom-cards/bar-card](https://github.com/custom-cards/bar-card).
+
 ## [Examples](#examples-1)
 
 ![Default](https://github.com/custom-cards/bar-card/blob/master/images/default.gif?raw=true)
